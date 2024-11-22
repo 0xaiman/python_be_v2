@@ -1,3 +1,4 @@
+# milesight camera
 import base64
 import io
 import os
@@ -15,7 +16,7 @@ load_dotenv()
 
 @api.route('/test', methods=['POST'])
 def test():
-    return jsonify({"message": "This is a test endpoint for v1."}), 200
+    return jsonify({"message": "This is a test endpoint for v1, MILESIGHT CAMERA."}), 200
  
 
 @api.route('/parking-session/operatorId/<int:operatorId>/floorId/<int:floorId>', methods=['POST'])
@@ -26,6 +27,7 @@ def parking_event(operatorId, floorId):
         base_url = os.getenv("TARGET_URL","http://localhost:3000/parking-session/operatorId/1/floorId/1")
         print("operator id:",operatorId)
         print("floor id:",floorId)
+        print("raw data", raw_data)
         target_url = f"{base_url}/parking-session/operatorId/{operatorId}/floorId/{floorId}"
     
         time = raw_data['time']
@@ -44,7 +46,7 @@ def parking_event(operatorId, floorId):
         base64_processed_image = save_and_apply_overlay(time, license_plate, device_name, processed_image)
 
         
-        print(base64_processed_image)
+        # print(base64_processed_image)
 
         raw_data['snapshot'] = base64_processed_image # change the value from original base 64 to processed one.
 
