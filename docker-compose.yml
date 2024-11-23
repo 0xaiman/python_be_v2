@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: iot_db_postgres
+    environment:
+      POSTGRES_DB: IOT_DB
+      POSTGRES_USER: iot_user
+      POSTGRES_PASSWORD: secure_password
+    ports:
+      - "5440:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - iot_network
+
+  pgadmin:
+    image: postgres:latest
+    container_name: iot_db_pgadmin
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: iot_db
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - iot_network
+
+volumes:
+  postgres_data:
+
+networks:
+  iot_network:

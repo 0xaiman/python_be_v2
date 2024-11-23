@@ -9,6 +9,9 @@ from dotenv import load_dotenv
 from flask import Blueprint, jsonify, request
 from PIL import Image, ImageDraw, ImageFont
 
+from app.db import db
+from app.models.parking_logs import ParkingLog
+
 api = Blueprint('v1', __name__)
 
 load_dotenv()
@@ -23,13 +26,16 @@ def test():
 def parking_event(operatorId, floorId):
     try:
         raw_data = request.json
-        # target_url =  "http://localhost:3000/parking-session/test"
+        
         base_url = os.getenv("TARGET_URL","http://localhost:3000/parking-session/operatorId/1/floorId/1")
         print("operator id:",operatorId)
         print("floor id:",floorId)
         print("raw data", raw_data)
+
+        # 1 -Generate target url to NESTJS
         target_url = f"{base_url}/parking-session/operatorId/{operatorId}/floorId/{floorId}"
     
+        # 2- Data extraction
         time = raw_data['time']
         license_plate = raw_data['License Plate']
         device_name = raw_data['device']
@@ -41,17 +47,27 @@ def parking_event(operatorId, floorId):
         }
         snapshot_base64 = raw_data['snapshot']
 
-       
+        # 3 - helper function : Image compresion , overlay   
         processed_image = snapshot_processing( coordinates, snapshot_base64)
+
+        # 4 - save and  convert the processed image into base64 again to send to NESTJS
         base64_processed_image = save_and_apply_overlay(time, license_plate, device_name, processed_image)
 
         
-        # print(base64_processed_image)
-
+       
+        # 5 - Update the base64 value  with the processed  image one
         raw_data['snapshot'] = base64_processed_image # change the value from original base 64 to processed one.
 
+        
+        # 7 - send POST request to NESTJS
         response = requests.post(target_url,json=raw_data)
         print(response.content)
+
+        #6 - STore the data into the database
+        db_response = save_parking_event_to_db(operatorId, floorId,raw_data)
+        if db_response["status"] == "error":
+            return jsonify({"error": db_response["message"]}), 500
+        
         return response.content, response.status_code
         # return "OK"
     except requests.exceptions.Timeout:
@@ -128,3 +144,42 @@ def save_and_apply_overlay(time, license_plate, device_name, img):
     base64_encoded_compressed_img = base64.b64encode(buffer.read()).decode('utf-8')
 
     return base64_encoded_compressed_img
+
+def save_parking_event_to_db(operatorId, floorId,raw_data):
+    """
+    Save parking event data to the database.
+    """
+    try:
+        parking_event = ParkingLog(
+            event=raw_data.get('event'),
+            operator_id = operatorId,
+            floor_id = floorId,
+            device=raw_data.get('device'),
+            time=datetime.strptime(raw_data['time'], '%Y-%m-%d %H:%M:%S'),
+            report_type=raw_data.get('report_type'),
+            resolution_w=raw_data.get('resolution_w'),
+            resolution_h=raw_data.get('resolution_h'),
+            channel=raw_data.get('channel'),
+            bay_name=raw_data.get('bay_name'),
+            bay_id=raw_data.get('bay_id'),
+            occupancy=raw_data.get('occupancy'),
+            duration=raw_data.get('duration'),
+            license_plate=raw_data.get('License Plate'),
+            plate_color=raw_data.get('Plate Color'),
+            vehicle_type=raw_data.get('Vehicle Type'),
+            vehicle_color=raw_data.get('Vehicle Color'),
+            vehicle_brand=raw_data.get('Vehicle Brand'),
+            coordinate_x1=raw_data.get('coordinate_x1'),
+            coordinate_y1=raw_data.get('coordinate_y1'),
+            coordinate_x2=raw_data.get('coordinate_x2'),
+            coordinate_y2=raw_data.get('coordinate_y2'),
+            snapshot=raw_data.get('snapshot')
+        )
+        db.session.add(parking_event)
+        db.session.commit()
+        print("Parking event saved to database.")
+        return {"status": "success", "message": "Data saved successfully."}
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error saving to database: {e}")
+        return {"status": "error", "message": str(e)}
