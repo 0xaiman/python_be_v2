@@ -23,9 +23,19 @@ def test():
  
 
 @api.route('/parking-session/operatorId/<int:operatorId>/floorId/<int:floorId>', methods=['POST'])
+# /parking-session/operatorId/1/floorId/1 GROUND (100)
+# /parking-session/operatorId/1/floorId/2 LEVEL 1 (100)
+# ...
+# /parking-session/operatorId/1/floorId/10 LEVEL10
+# 
 def parking_event(operatorId, floorId):
     try:
         raw_data = request.json
+        bearer_token = "token"
+        headers = {
+        "Authorization": f"Bearer {bearer_token}",
+        "Content-Type": "application/json"
+    }
         
         base_url = os.getenv("TARGET_URL","http://localhost:3000/parking-session/operatorId/1/floorId/1")
         print("operator id:",operatorId)
@@ -35,7 +45,7 @@ def parking_event(operatorId, floorId):
         # 1 -Generate target url to NESTJS
         target_url = f"{base_url}/parking-session/operatorId/{operatorId}/floorId/{floorId}"
     
-        # 2- Data extraction
+        # 2- Data extraction to use in naming the snapshot files
         time = raw_data['time']
         license_plate = raw_data['License Plate']
         device_name = raw_data['device']
@@ -53,17 +63,14 @@ def parking_event(operatorId, floorId):
         # 4 - save and  convert the processed image into base64 again to send to NESTJS
         base64_processed_image = save_and_apply_overlay(time, license_plate, device_name, processed_image)
 
-        
-       
         # 5 - Update the base64 value  with the processed  image one
-        raw_data['snapshot'] = base64_processed_image # change the value from original base 64 to processed one.
+        raw_data['snapshot'] = base64_processed_image 
 
-        
-        # 7 - send POST request to NESTJS
-        response = requests.post(target_url,json=raw_data)
+        # 6 - send POST request to NESTJS
+        response = requests.post(target_url,json=raw_data, headers=headers)
         print(response.content)
 
-        #6 - STore the data into the database
+        #7 - Store the data into the database
         db_response = save_parking_event_to_db(operatorId, floorId,raw_data)
         if db_response["status"] == "error":
             return jsonify({"error": db_response["message"]}), 500

@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
@@ -16,7 +18,7 @@ def create_app():
     app.register_blueprint(v2_api, url_prefix='/api/v2')
 
     # Database configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://iot_user:secure_password@localhost:5440/IOT_DB'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')  # Use DATABASE_URI from .env
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
