@@ -31,7 +31,10 @@ def test():
 def parking_event(operatorId, floorId):
     try:
         raw_data = request.json
-        bearer_token = "token"
+        bearer_token = os.getenv("BEARER_TOKEN")
+        if not bearer_token:
+            return jsonify({"error": "Bearer token not found in .env file"}), 500
+    
         headers = {
         "Authorization": f"Bearer {bearer_token}",
         "Content-Type": "application/json"
