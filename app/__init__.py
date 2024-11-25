@@ -5,9 +5,9 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_sqlalchemy import SQLAlchemy
 
-from app.api.v1.routes import \
-    create_v1_routes  # Ensure this is the correct import
-from app.api.v2.routes import api as v2_api
+from app.api.v1.routes import create_v1_routes
+# from app.api.v2.routes import api as v2_api
+from app.api.v2.routes import create_v2_routes
 from app.db import db
 
 
@@ -24,7 +24,8 @@ def create_app():
 
     # Register API blueprints
     app.register_blueprint(create_v1_routes(limiter), url_prefix='/api/v1')
-    app.register_blueprint(v2_api, url_prefix='/api/v2')
+    app.register_blueprint(create_v2_routes(limiter), url_prefix='/api/v2')
+    # app.register_blueprint(v2_api, url_prefix='/api/v2')
 
     # Database configuration
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')  # Use DATABASE_URI from .env
