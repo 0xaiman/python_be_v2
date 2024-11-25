@@ -30,7 +30,7 @@ def create_v2_routes(limiter):
 
         return raw_data
 
-    @api.route('/parking-session/operatorId/<int:operatorId>/floorId/<int:floorId>', methods=['POST'])
+    @api.route('/parking-session/operatorId/<int:operatorId>/floorId/<int:floorId>/LprResult', methods=['POST'])
     @limiter.limit("50 per minute")
     def parking_event(operatorId, floorId):
         payload = request.json
@@ -87,11 +87,12 @@ def create_v2_routes(limiter):
             print(f"Payload saved to {json_file_path}")
 
             # Save picture if applicable
+            # Save picture if applicable
             if picture_file_name and pic_small:
                 picture_file_path = os.path.join(cam_directory, picture_file_name)
                 try:
                     # Fix and decode the modified Base64 string
-                    # print(pic_small)
+                    print(f"Saving image to {picture_file_path}")
                     pic_small_fixed = fix_base64(pic_small)
                     image_data = base64.b64decode(pic_small_fixed)
 
@@ -104,6 +105,7 @@ def create_v2_routes(limiter):
                     print(f"Picture saved to {picture_file_path}")
                 except Exception as e:
                     print(f"Error saving picture: {e}")
+
     
         except Exception as e:
             print(f"Error processing payload: {e}")
@@ -129,7 +131,9 @@ def fix_base64(data):
     Fix the modified Base64 string by reversing substitutions and padding.
     """
     data = data.replace('-', '+').replace('_', '/').replace('.', '=')
-    return data
+    # Check if padding is correct (multiple of 4 chars)
+    return data + '=' * (-len(data) % 4)  # Ensure proper padding
+
 
 def add_text_to_image(image_data, text, font_size=20):
     """

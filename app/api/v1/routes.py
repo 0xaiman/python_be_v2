@@ -2,6 +2,7 @@
 import base64
 import io
 import os
+import traceback
 from datetime import datetime
 
 import requests
@@ -67,13 +68,15 @@ def create_v1_routes(limiter):
                 base64_processed_image = save_and_apply_overlay(time, license_plate, device_name, processed_image)
 
                 # 5 - Update the base64 value  with the processed  image one
-                raw_data['snapshot'] = base64_processed_image 
+                # raw_data['snapshot'] = base64_processed_image 
+                raw_data['snapshot'] = None
+
             else:
                 raw_data['snapshot'] = None
-            print("base64",raw_data['snapshot'])
+            print("raw_data",raw_data)
             # 6 - send POST request to NESTJS
             response = requests.post(target_url,json=raw_data, headers=headers)
-            print(response.content)
+            # print(response.content)
 
             #7 - Store the data into the database
             db_response = save_parking_event_to_db(operatorId, floorId,raw_data)
@@ -156,41 +159,50 @@ def save_and_apply_overlay(time, license_plate, device_name, img):
 
     return base64_encoded_compressed_img
 
-def save_parking_event_to_db(operatorId, floorId,raw_data):
+def save_parking_event_to_db(operatorId, floorId, raw_data):
     """
     Save parking event data to the database.
     """
     try:
+        # Extract time, handle potential invalid formats
+        try:
+            time = datetime.strptime(raw_data['time'], '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            time = datetime.now()  # Use current time if the provided time is invalid
+
+        # Prepare the parking event object
         parking_event = ParkingLog(
-        event=raw_data.get('event'),
-        operator_id = operatorId,
-        floor_id = floorId,
-        device=raw_data.get('device'),
-        time=datetime.strptime(raw_data['time'], '%Y-%m-%d %H:%M:%S'),
-        report_type=raw_data.get('report_type'),
-        resolution_w=raw_data.get('resolution_w'),
-        resolution_h=raw_data.get('resolution_h'),
-        channel=raw_data.get('channel'),
-        bay_name=raw_data.get('bay_name'),
-        # bay_id=raw_data.get('bay_id'),
-        occupancy=raw_data.get('occupancy'),
-        duration=raw_data.get('duration'),
-        license_plate=raw_data.get('License Plate'),
-        plate_color=raw_data.get('Plate Color'),
-        vehicle_type=raw_data.get('Vehicle Type'),
-        vehicle_color=raw_data.get('Vehicle Color'),
-        vehicle_brand=raw_data.get('Vehicle Brand'),
-        coordinate_x1=raw_data.get('coordinate_x1'),
-        coordinate_y1=raw_data.get('coordinate_y1'),
-        coordinate_x2=raw_data.get('coordinate_x2'),
-        coordinate_y2=raw_data.get('coordinate_y2'),
-        snapshot=raw_data.get('snapshot')
-            )
+            # event=raw_data.get('event'),
+            # operator_id=operatorId,
+            # floor_id=floorId,
+            # device=raw_data.get('device'),
+            # time=time,
+            # report_type=raw_data.get('report_type'),
+            # resolution_w=raw_data.get('resolution_w'),
+            # resolution_h=raw_data.get('resolution_h'),
+            # channel=raw_data.get('channel'),
+            # bay_name=raw_data.get('space_name'),
+            # occupancy=raw_data.get('occupancy'),
+            # duration=raw_data.get('duration'),
+            # license_plate=raw_data.get('License Plate'),
+            # plate_color=raw_data.get('Plate Color'),
+            # vehicle_type=raw_data.get('Vehicle Type'),
+            # vehicle_color=raw_data.get('Vehicle Color'),
+            # vehicle_brand=raw_data.get('Vehicle Brand'),
+            # coordinate_x1=raw_data.get('coordinate_x1'),
+            # coordinate_y1=raw_data.get('coordinate_y1'),
+            # coordinate_x2=raw_data.get('coordinate_x2'),
+            # coordinate_y2=raw_data.get('coordinate_y2'),
+            snapshot=raw_data.get('snapshot') or None  # Handle None properly for snapshot
+        )
+        
         db.session.add(parking_event)
         db.session.commit()
         print("Parking event saved to database.")
         return {"status": "success", "message": "Data saved successfully."}
+    
     except Exception as e:
         db.session.rollback()
         print(f"Error saving to database: {e}")
+        traceback.print_exc()
         return {"status": "error", "message": str(e)}
