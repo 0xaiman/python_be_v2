@@ -68,6 +68,15 @@ def create_v2_routes(limiter):
                 # print("pic_small",pic_small)
                 # store this in redis, then points to nestjs
 
+                # Validate bay_id using the helper function
+                validation_result = validate_bay_id(bay_id)
+                if not validation_result["success"]:
+                    print(validation_result["message"])
+                    return jsonify({
+                        "status": "error",
+                        "message": validation_result["message"]
+                    }), 400
+
                 if park_space_info.get('spaceState') == 1:  # SpaceState 1 indicates entering
                     base_name = f"{recog_time}_{plate_num}_{bay_id}_{bay_name}"
                     json_file_name = f"{base_name}_.json"
@@ -224,6 +233,28 @@ def validate_operator_and_floor(operator_id, floor_id):
     except Exception as e:
         print(f"Error during validation: {e}")
         return False
+
+def validate_bay_id(bay_id):
+    """
+    Validate if the bay_id exists in the ParkingBay table.
+
+    Args:
+        bay_id (int): The ID of the parking bay to validate.
+
+    Returns:
+        dict: A dictionary containing a success flag and message.
+    """
+    existing_bay = ParkingBay.query.filter_by(id=bay_id).first()
+    if not existing_bay:
+        return {
+            "success": False,
+            "message": f"Invalid bay_id: {bay_id}. The bay does not exist."
+        }
+    return {
+        "success": True,
+        "message": "Bay ID is valid."
+    }
+
 
 
     
