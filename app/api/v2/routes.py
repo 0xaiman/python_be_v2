@@ -4,6 +4,7 @@ import json
 import os
 from datetime import datetime
 from io import BytesIO
+from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
@@ -19,7 +20,7 @@ def create_v2_routes(limiter):
     @api.route('/test', methods=['GET'])
     @limiter.limit("5 per minute")
     def test():
-        return jsonify({"message": "This is a test endpoint for v2, NEW CAMERA."}), 200
+        return jsonify({"message": "This is a test endpoint for v2, TGW CAMERA."}), 200
 
     @api.route('/raw-payload', methods=['POST'])
     @limiter.limit("5 per minute")
@@ -29,9 +30,9 @@ def create_v2_routes(limiter):
 
         return raw_data
 
-    @api.route('/abc123', methods=['POST'])
+    @api.route('/parking-session/operatorId/<int:operatorId>/floorId/<int:floorId>', methods=['POST'])
     @limiter.limit("50 per minute")
-    def abc123():
+    def parking_event(operatorId, floorId):
         payload = request.json
         # print("Received Payload",payload)
 
@@ -44,19 +45,19 @@ def create_v2_routes(limiter):
             if park_space_info:
                 recog_time = park_space_info.get('recogTime', '').replace(':', '-').replace(' ', '_')
                 plate_num = park_space_info.get('plateNum', 'unknown')
-                space_no = park_space_info.get('spaceNo', 'unknown')
-                space_name = park_space_info.get('spaceName', 'unknown')
+                bay_id = park_space_info.get('spaceNo', 'unknown')
+                bay_name = park_space_info.get('spaceName', 'unknown')
                 pic_small = park_space_info.get('picSmall', '')
 
                 print("recog_time",recog_time)
                 print("plate_num",plate_num)
-                print("space_no",space_no)
-                print("space_name",space_name)
+                print("bay_id",bay_id)
+                print("bay_name",bay_name)
                 # print("pic_small",pic_small)
                 # store this in redis, then points to nestjs
 
                 if park_space_info.get('spaceState') == 1:  # SpaceState 1 indicates entering
-                    base_name = f"{recog_time}_{plate_num}_{space_no}_{space_name}"
+                    base_name = f"{recog_time}_{plate_num}_{bay_id}_{bay_name}"
                     json_file_name = f"{base_name}_.json"
                     picture_file_name = f"{base_name}.jpg"
                     overlay_text = f"{plate_num} - {recog_time}"  # Text to overlay on the image
@@ -71,14 +72,16 @@ def create_v2_routes(limiter):
                 picture_file_name = None
 
             # Directory structure
-            base_directory = r'C:\Users\maima\Desktop\bigtac\flask_iot_server_forwarding_only\json_file' #
-        
-            date_directory = os.path.join(base_directory, current_date)
-            cam_directory = os.path.join(date_directory, cam_name)
-            os.makedirs(cam_directory, exist_ok=True)
+            # base_directory = r'C:\Users\maima\Desktop\bigtac\flask_iot_server_forwarding_only\json_file' #
+            base_directory = Path(__file__).resolve().parent / 'json_file'  # Dynamic base directory
+            date_directory = base_directory / current_date
+            cam_directory = date_directory / cam_name
 
-        # Save JSON file
-            json_file_path = os.path.join(cam_directory, json_file_name)
+            cam_directory.mkdir(parents=True, exist_ok=True)
+
+            # Save JSON file
+            json_file_path = cam_directory / json_file_name
+            # json_file_path = os.path.join(cam_directory, json_file_name)
             with open(json_file_path, 'w') as json_file:
                 json.dump(payload, json_file, indent=4)
             print(f"Payload saved to {json_file_path}")
@@ -115,6 +118,8 @@ def create_v2_routes(limiter):
             "message": "Payload received and processed.",
             "received_data": payload
         })
+    
+
     
     return api
 

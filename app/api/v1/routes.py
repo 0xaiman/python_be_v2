@@ -41,7 +41,7 @@ def create_v1_routes(limiter):
             base_url = os.getenv("TARGET_URL","http://localhost:3000/parking-session/operatorId/1/floorId/1")
             print("operator id:",operatorId)
             print("floor id:",floorId)
-            print("raw data", raw_data)
+            print("occupancy", raw_data['occupancy'])
 
             # 1 -Generate target url to NESTJS
             target_url = f"{base_url}/parking-session/operatorId/{operatorId}/floorId/{floorId}"
@@ -57,16 +57,20 @@ def create_v1_routes(limiter):
                 'y2':raw_data['coordinate_y2']
             }
             snapshot_base64 = raw_data['snapshot']
+            occupancy = raw_data['occupancy'] 
 
-            # 3 - helper function : Image compresion , overlay   
-            processed_image = snapshot_processing( coordinates, snapshot_base64)
+            if(occupancy == 1):
+                # 3 - helper function : Image compresion , overlay   
+                processed_image = snapshot_processing( coordinates, snapshot_base64)
 
-            # 4 - save and  convert the processed image into base64 again to send to NESTJS
-            base64_processed_image = save_and_apply_overlay(time, license_plate, device_name, processed_image)
+                # 4 - save and  convert the processed image into base64 again to send to NESTJS
+                base64_processed_image = save_and_apply_overlay(time, license_plate, device_name, processed_image)
 
-            # 5 - Update the base64 value  with the processed  image one
-            raw_data['snapshot'] = base64_processed_image 
-
+                # 5 - Update the base64 value  with the processed  image one
+                raw_data['snapshot'] = base64_processed_image 
+            else:
+                raw_data['snapshot'] = None
+            print("base64",raw_data['snapshot'])
             # 6 - send POST request to NESTJS
             response = requests.post(target_url,json=raw_data, headers=headers)
             print(response.content)
@@ -99,9 +103,9 @@ def snapshot_processing( coordinates, snapshot_base64):
     print("snapshot processing ok")
 
     img = Image.open(io.BytesIO(base64.decodebytes(bytes(snapshot_base64,"utf-8"))))
-    # cropped_img = img.crop((coordinates['x1'], coordinates['y1'], coordinates['x2'], coordinates['y2']))
+    cropped_img = img.crop((coordinates['x1'], coordinates['y1'], coordinates['x2'], coordinates['y2']))
 
-    return img
+    return cropped_img
 
 
 def save_and_apply_overlay(time, license_plate, device_name, img):
