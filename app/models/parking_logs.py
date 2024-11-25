@@ -16,7 +16,7 @@ class ParkingLog(db.Model):
     resolution_h = db.Column(db.Integer, nullable=False)
     channel = db.Column(db.Integer, nullable=False)
     bay_name = db.Column(db.String(50), nullable=False)
-    bay_id = db.Column(db.Integer, nullable=False)
+    bay_id = db.Column(db.Integer, nullable=True)
     occupancy = db.Column(db.Integer, nullable=False)
     duration = db.Column(db.Integer, nullable=True)
     license_plate = db.Column(db.String(50), nullable=True)

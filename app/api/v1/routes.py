@@ -25,7 +25,7 @@ def create_v1_routes(limiter):
     
 
     @api.route('/parking-session/operatorId/<int:operatorId>/floorId/<int:floorId>', methods=['POST'])
-    @limiter.limit("5 per minute")
+    @limiter.limit("50 per minute")
     def parking_event(operatorId, floorId):
         try:
             raw_data = request.json
@@ -168,7 +168,7 @@ def save_parking_event_to_db(operatorId, floorId,raw_data):
         resolution_h=raw_data.get('resolution_h'),
         channel=raw_data.get('channel'),
         bay_name=raw_data.get('bay_name'),
-        bay_id=raw_data.get('bay_id'),
+        # bay_id=raw_data.get('bay_id'),
         occupancy=raw_data.get('occupancy'),
         duration=raw_data.get('duration'),
         license_plate=raw_data.get('License Plate'),
