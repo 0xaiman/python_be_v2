@@ -11,6 +11,9 @@ from dotenv import load_dotenv
 from flask import Blueprint, Flask, jsonify, request
 from PIL import Image, ImageDraw, ImageFont
 
+from app.models.v2.models import (Device, ParkingBay, ParkingFloor,
+                                  ParkingOperator, ParkingSession, Vehicle)
+
 api = Blueprint('v2', __name__)
 
 load_dotenv()
@@ -35,6 +38,13 @@ def create_v2_routes(limiter):
     def parking_event(operatorId, floorId):
         payload = request.json
         payload['picSmall'] = None
+
+        # validate if parking-operator and parkingfloor exist in DB
+        if not validate_operator_and_floor(operatorId, floorId):
+            return jsonify({
+                "status": "error",
+                "message": f"Parking operator with ID {operatorId} or floor with ID {floorId} does not exist."
+            }), 400
 
         try:
             # Extract details from payload
@@ -190,6 +200,34 @@ def add_text_to_image(image_data, text, font_size=20):
         return image_data  # Return original image if text overlay fails
 
 
+def validate_operator_and_floor(operator_id, floor_id):
+    """
+    Validates if the parking operator with operator_id has a floor with floor_id.
+
+    :param operator_id: ID of the parking operator
+    :param floor_id: ID of the parking floor
+    :return: True if the floor exists for the operator, False otherwise
+    """
+    try:
+        # Query the database to check the existence of the floor within the operator
+        operator = ParkingOperator.query.filter_by(id=operator_id).first()
+        print(operator)
+        if not operator:
+            return False  # Operator does not exist
+
+        # Check if the floor exists for the given operator
+        floor = ParkingFloor.query.filter_by(id=floor_id, operator_id=operator_id).first()
+        if not floor:
+            return False  # Floor does not exist for the operator
+
+        return True  # Both operator and floor exist
+    except Exception as e:
+        print(f"Error during validation: {e}")
+        return False
+
+
     
+
+
 
 

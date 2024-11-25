@@ -25,9 +25,9 @@ class ParkingFloor(db.Model):
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     parking_bays = db.relationship('ParkingBay', backref='floor', lazy=True)
-    devices = db.relationship('Devices', backref='floor', lazy=True)
+    devices = db.relationship('Device', backref='floor', lazy=True)  # Fixed: Changed from 'Devices' to 'Device'
 
-     # Foreign key to associate each parking floor with a parking operator
+    # Foreign key to associate each parking floor with a parking operator
     operator_id = db.Column(db.Integer, db.ForeignKey('parking_operators.id'), nullable=False)
 
 
@@ -68,7 +68,8 @@ class ParkingSession(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     start_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     end_time = db.Column(db.DateTime, nullable=True)  # Nullable to represent an ongoing session
-    status = db.Column(db.String(50), nullable=False, default="active")  # e.g., "active", "completed"
+    space_state = db.Column(db.Integer, nullable=False, default=0)  # e.g., "active", "completed"
+    change_state = db.Column(db.Integer, nullable=False, default=0)  # e.g., "active", "completed"
 
     # Foreign key linking to ParkingBay
     bay_id = db.Column(db.Integer, db.ForeignKey('parking_bays.id'), nullable=False)
