@@ -9,6 +9,7 @@ from app.api.v1.routes import create_v1_routes
 # from app.api.v2.routes import api as v2_api
 from app.api.v2.routes import create_v2_routes
 from app.db import db
+from app.models.v2.models import ParkingBay, ParkingFloor, ParkingOperator
 
 
 def create_app():

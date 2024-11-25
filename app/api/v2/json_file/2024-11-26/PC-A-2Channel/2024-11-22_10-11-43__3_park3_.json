@@ -1,0 +1,24 @@
+{
+    "version": "v10",
+    "mode": 2,
+    "camIP": "192.168.0.151",
+    "camMac": "18:03:00:1A:17:2E",
+    "camName": "PC-A-2Channel",
+    "parkSpaceCnt": 3,
+    "resultType": 1,
+    "firstTime": 0,
+    "parkSpaceInfo": [
+        {
+            "spaceNo": 3,
+            "spaceState": 1,
+            "changeState": 2,
+            "spaceName": "park3",
+            "plateColor": 0,
+            "plateNum": "",
+            "confidence": 0,
+            "recogTime": "2024-11-22 10:11:43",
+            "picSmall": null
+        }
+    ],
+    "picSmall": null
+}

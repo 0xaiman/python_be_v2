@@ -34,13 +34,15 @@ def create_v2_routes(limiter):
     @limiter.limit("50 per minute")
     def parking_event(operatorId, floorId):
         payload = request.json
-        # print("Received Payload",payload)
+        payload['picSmall'] = None
 
         try:
             # Extract details from payload
-            park_space_info = payload.get('parkSpaceInfo', [])[0]
+            park_space_info = payload.get('parkSpaceInfo', [])[0] # [1],[2] //edge case: handle 3 car park at once
             cam_name = payload.get('camName', 'unknown')
             current_date = datetime.now().strftime('%Y-%m-%d')
+            park_space_info['picSmall'] = None
+            print(park_space_info)
 
             if park_space_info:
                 recog_time = park_space_info.get('recogTime', '').replace(':', '-').replace(' ', '_')
