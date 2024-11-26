@@ -7,9 +7,9 @@ from flask_sqlalchemy import SQLAlchemy
 
 from app.api.v1.routes import create_v1_routes
 # from app.api.v2.routes import api as v2_api
-from app.api.v2.routes import create_v2_routes
+# from app.api.v2.routes import create_v2_routes
 from app.db import db
-from app.models.v2.models import ParkingBay, ParkingFloor, ParkingOperator
+from app.models.v1.models import ParkingBay, ParkingFloor, ParkingOperator
 
 
 def create_app():
@@ -25,7 +25,7 @@ def create_app():
 
     # Register API blueprints
     app.register_blueprint(create_v1_routes(limiter), url_prefix='/api/v1')
-    app.register_blueprint(create_v2_routes(limiter), url_prefix='/api/v2')
+    # app.register_blueprint(create_v2_routes(limiter), url_prefix='/api/v2')
     # app.register_blueprint(v2_api, url_prefix='/api/v2')
 
     # Database configuration

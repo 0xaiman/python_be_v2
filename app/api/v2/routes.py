@@ -37,7 +37,6 @@ def create_v2_routes(limiter):
     @limiter.limit("50 per minute")
     def parking_event(operatorId, floorId):
         payload = request.json
-        payload['picSmall'] = None
 
         # validate if parking-operator and parkingfloor exist in DB
         if not validate_operator_and_floor(operatorId, floorId):
@@ -51,7 +50,6 @@ def create_v2_routes(limiter):
             park_space_info = payload.get('parkSpaceInfo', [])[0] # [1],[2] //edge case: handle 3 car park at once
             cam_name = payload.get('camName', 'unknown')
             current_date = datetime.now().strftime('%Y-%m-%d')
-            park_space_info['picSmall'] = None
             print(park_space_info)
 
             if park_space_info:
@@ -100,12 +98,12 @@ def create_v2_routes(limiter):
 
             cam_directory.mkdir(parents=True, exist_ok=True)
 
-            # Save JSON file
-            json_file_path = cam_directory / json_file_name
-            # json_file_path = os.path.join(cam_directory, json_file_name)
-            with open(json_file_path, 'w') as json_file:
-                json.dump(payload, json_file, indent=4)
-            print(f"Payload saved to {json_file_path}")
+            # # Save JSON file
+            # json_file_path = cam_directory / json_file_name
+            # # json_file_path = os.path.join(cam_directory, json_file_name)
+            # with open(json_file_path, 'w') as json_file:
+            #     json.dump(payload, json_file, indent=4)
+            # print(f"Payload saved to {json_file_path}")
 
             # Save picture if applicable
             # Save picture if applicable
@@ -181,9 +179,13 @@ def add_text_to_image(image_data, text, font_size=20):
         # Get image dimensions
         img_width, img_height = image.size
 
-        # Calculate text size and position
+        # Calculate text size and position using textbbox
         margin = 10
-        text_width, text_height = draw.textsize(text, font=font)
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+
+        # Position the text at the bottom-left corner
         text_position = (margin, img_height - text_height - margin)
 
         # Define rectangle coordinates for background
@@ -200,7 +202,7 @@ def add_text_to_image(image_data, text, font_size=20):
 
         # Save the modified image to byte data
         output = BytesIO()
-        image.save(output, format="JPEG")
+        image.save(output, format="JPEG", quality=20)
         output.seek(0)
         return output.getvalue()
     

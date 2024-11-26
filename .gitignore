@@ -32,6 +32,8 @@ Dockerfile
 
 # Application snapshots or temporary files
 snapshot/
+snapshot/
+json_file/
 
 # Virtual Machine files
 *.vagrant

@@ -3,11 +3,11 @@ version: "3.8"
 services:
   postgres:
     image: postgres:latest
-    container_name: iot_db_postgres
+    container_name: milesight_db_container
     environment:
-      POSTGRES_DB: IOT_DB
-      POSTGRES_USER: iot_user
-      POSTGRES_PASSWORD: secure_password
+      POSTGRES_DB: IOT_DB_MILESIGHT
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
     ports:
       - "5440:5432"
     volumes:

@@ -10,7 +10,6 @@ from flask import Blueprint, jsonify, request
 from PIL import Image, ImageDraw, ImageFont
 
 from app.db import db
-from app.models.parking_logs import ParkingLog
 
 api = Blueprint('v1', __name__)
 
@@ -68,8 +67,8 @@ def create_v1_routes(limiter):
                 base64_processed_image = save_and_apply_overlay(time, license_plate, device_name, processed_image)
 
                 # 5 - Update the base64 value  with the processed  image one
-                # raw_data['snapshot'] = base64_processed_image 
-                raw_data['snapshot'] = None
+                raw_data['snapshot'] = base64_processed_image 
+                # raw_data['snapshot'] = None
 
             else:
                 raw_data['snapshot'] = None
