@@ -69,7 +69,6 @@ class ParkingSession(db.Model):
     start_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     end_time = db.Column(db.DateTime, nullable=True)  # Nullable to represent an ongoing session
     space_state = db.Column(db.Integer, nullable=False, default=0)  # e.g., "active", "completed"
-    change_state = db.Column(db.Integer, nullable=False, default=0)  # e.g., "active", "completed"
 
     # Foreign key linking to ParkingBay
     bay_id = db.Column(db.Integer, db.ForeignKey('parking_bays.id'), nullable=False)
